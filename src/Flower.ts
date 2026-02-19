@@ -15,7 +15,6 @@ export class Flower {
         this.#size = 0;
     }
 
-
     get position() {
         return this.#position;
     }

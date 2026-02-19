@@ -1,7 +1,8 @@
 // import { Vec2 } from "./Vec2";
 
-import { Plant } from "./Plant";
-import type { Random } from "./Random";
+import { Plant, type Environment, type Resources } from "./Plant";
+import { Random } from "./Random";
+import { ResourcePool } from "./ResourcePool";
 import { Vec2 } from "./Vec2";
 
 const SKY_RATIO = 3 / 4;
@@ -9,7 +10,7 @@ const SUN_RATIO = 0 / 8;
 const SUN_MOVEMENT_MAX = 3 / 4;
 
 export class World {
-    readonly random: Random;
+    random: Random;
 
     readonly #width: number;
     readonly #height: number;
@@ -18,11 +19,17 @@ export class World {
     readonly groundY: number;
     readonly sunY: number;
 
-    #sunPosition: Vec2;
+    // Environment Data:
     #gravity: Vec2;
 
+    #sunPosition: Vec2;
+    #lightHours: number;
+    #temperature: number;
+    #water: number;
+    #nutrients: number;
+    #carbonDioxide: number;
+
     #plant: Plant;
-    #stemSegmentsCache: Vec2[] = [];
 
     constructor(random: Random, width: number, height: number) {
         this.random = random;
@@ -33,9 +40,31 @@ export class World {
         this.sunY = Math.round(this.#height * (1 - SUN_RATIO));
         this.groundY = Math.round(this.#height * (1 - SKY_RATIO));
 
-        this.#gravity = new Vec2(0, 0);
+        this.#gravity = new Vec2(0, -10);
         this.#sunPosition = new Vec2(this.middleX, this.sunY);
+        this.#lightHours = 14;
+        this.#temperature = 22;
+        this.#carbonDioxide = 400;
+
+        this.#nutrients = 2;
+        this.#water = 2;
+
         this.#plant = new Plant(this);
+    }
+
+    get environment(): Environment {
+        return {
+            lightHours: this.#lightHours,
+            temperature: this.#temperature,
+        };
+    }
+
+    get resources(): Resources {
+        return {
+            water: this.#water,
+            carbonDioxide: this.#carbonDioxide,
+            nutrients: this.#nutrients,
+        };
     }
 
     moveSun(offset: number) {
@@ -54,11 +83,70 @@ export class World {
     setGravity(gravity: number) {
         const isInBounds = 0 <= gravity && gravity <= 10;
         if (!isInBounds) {
-            console.warn(`offset not in range [0, 10]. offset: ${gravity}`);
+            console.warn(`gravity not in range [0, 10]. gravity: ${gravity}`);
             return;
         }
-        // return; // TODO: remove
         this.#gravity = new Vec2(0, -gravity);
+    }
+
+    setSunHours(sunHours: number) {
+        const isInBounds = 0 <= sunHours && sunHours <= 24;
+        if (!isInBounds) {
+            console.warn(`sun hours not in range [0, 24]. sun hours: ${sunHours}`);
+            return;
+        }
+        const isMulipleOfTwo = sunHours % 2 == 0;
+        if (!isMulipleOfTwo) {
+            console.warn(`sun hours must be a multiple of two`);
+            return;
+        }
+        this.#lightHours = sunHours;
+    }
+
+    setTemperature(temperature: number) {
+        const isInBounds = 0 <= temperature && temperature <= 40;
+        if (!isInBounds) {
+            console.warn(`temperature not in range [0, 40]. temperature: ${temperature}`);
+            return;
+        }
+        const isMulipleOfFive = temperature % 5 == 0;
+        if (!isMulipleOfFive) {
+            console.warn(`temperature must be a multiple of five`);
+            return;
+        }
+        this.#temperature = temperature;
+    }
+
+    setCarbonDioxide(carbonDioxide: number) {
+        const isInBounds = 0 <= carbonDioxide && carbonDioxide <= 40;
+        if (!isInBounds) {
+            console.warn(`carbonDioxide not in range [0, 900]. carbonDioxide: ${carbonDioxide}`);
+            return;
+        }
+        const isMulipleOfFive = carbonDioxide % 100 == 0;
+        if (!isMulipleOfFive) {
+            console.warn(`carbonDioxide must be a multiple of 100`);
+            return;
+        }
+        this.#carbonDioxide = carbonDioxide;
+    }
+
+    setWater(water: number) {
+        const isInBounds = 0 <= water && water <= 4;
+        if (!isInBounds) {
+            console.warn(`water not in range [0, 4]. water: ${water}`);
+            return;
+        }
+        this.#water = water;
+    }
+
+    setNutrients(nutrients: number) {
+        const isInBounds = 0 <= nutrients && nutrients <= 4;
+        if (!isInBounds) {
+            console.warn(`nutrients not in range [0, 4]. nutrients: ${nutrients}`);
+            return;
+        }
+        this.#nutrients = nutrients;
     }
 
     update(deltaTime: number) {
@@ -66,7 +154,8 @@ export class World {
     }
 
     reset() {
-        this.#plant.reset();
+        this.random = new Random(this.random.seed);
+        this.#plant = new Plant(this);
     }
 
 
@@ -108,11 +197,6 @@ export class World {
     get leafs() {
         return this.#plant.leafs;
     }
-
-    get stemSegments() {
-        return this.#stemSegmentsCache;
-    }
-
 
     get stemGSegments() {
         return this.#plant.stemGSegments;

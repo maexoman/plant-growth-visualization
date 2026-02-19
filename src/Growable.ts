@@ -81,6 +81,10 @@ export class Growable {
         return this.#segments.length / this.#segmentMax;
     }
 
+    get length() {
+        return this.#segments.length * this.#segmentSize;
+    }
+
     calculateAuxillaryBud(angleDeg: number) {
         if (this.#lastGrowDirection === null) {
             return null;

@@ -10,6 +10,7 @@ const offset = new Vec2(0, -10);
 
 function main() {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    const deadX = document.getElementById('dead-x') as HTMLDivElement;
     const context = canvas.getContext('2d') as CanvasRenderingContext2D;
 
     const ghostCanvas = document.getElementById('ghost-canvas') as HTMLCanvasElement;
@@ -40,6 +41,7 @@ function main() {
                 if (ghostRendered === false) {
                     renderGhostPlant(ghostContext, world, world.plant);
                     ghostCanvas.style.display = 'block';
+                    deadX.style.display = 'flex';
                     ghostRendered = true;
                 }
             }
@@ -65,8 +67,13 @@ function main() {
     const resetButton = document.getElementById('btn-reset') as HTMLButtonElement;
     resetButton.addEventListener('click', function () {
         update = false;
+
+        deadX.style.display = 'none';
+        ghostCanvas.style.display = 'none';
+        ghostContext.clearRect(0, 0, ghostContext.canvas.width, ghostContext.canvas.height);
+        ghostRendered = false;
+
         world.reset();
-        alert(random.seed)
     });
 
     // Hook up the sun slider
@@ -88,45 +95,106 @@ function main() {
 
     // Hook up the gravity slider
     const gravitySlider = document.getElementById('sld-gravity') as HTMLInputElement;
+    gravitySlider.value = (-world.gravity.y).toString(10);
     gravitySlider.addEventListener('input', function () {
-        let gravity = 0;
+        let value = 0;
         try {
-            gravity = parseInt(gravitySlider.value, 10);
-            if (Number.isNaN(gravity)) {
+            value = parseInt(gravitySlider.value, 10);
+            if (Number.isNaN(value)) {
                 return;
             }
         } catch (error) {
             return;
         }
 
-        // @ts-ignore
-        window.gr = gravity;
+        world.setGravity(value);
+    });
 
+    // Hook up the sun-hour slider
+    const sunHourSlider = document.getElementById('sld-sun-hours') as HTMLInputElement;
+    sunHourSlider.value = (world.environment.lightHours).toString(10);
+    sunHourSlider.addEventListener('input', function () {
+        let value = 0;
+        try {
+            value = parseInt(sunHourSlider.value, 10);
+            if (Number.isNaN(value)) {
+                return;
+            }
+        } catch (error) {
+            return;
+        }
 
-        world.setGravity(gravity);
+        world.setSunHours(value);
+    });
+
+    // Hook up the temerature slider
+    const temperatureSlider = document.getElementById('sld-temperature') as HTMLInputElement;
+    temperatureSlider.value = (world.environment.temperature).toString(10);
+    temperatureSlider.addEventListener('input', function () {
+        let value = 0;
+        try {
+            value = parseInt(temperatureSlider.value, 10);
+            if (Number.isNaN(value)) {
+                return;
+            }
+        } catch (error) {
+            return;
+        }
+
+        world.setTemperature(value);
+    });
+
+    // Hook up the carbon dioxide slider
+    const carbonDioxideSlider = document.getElementById('sld-carbon-dioxide') as HTMLInputElement;
+    carbonDioxideSlider.value = (world.resources.carbonDioxide).toString(10);
+    carbonDioxideSlider.addEventListener('input', function () {
+        let value = 0;
+        try {
+            value = parseInt(carbonDioxideSlider.value, 10);
+            if (Number.isNaN(value)) {
+                return;
+            }
+        } catch (error) {
+            return;
+        }
+
+        world.setCarbonDioxide(value);
+    });
+
+    // Hook up the water slider
+    const waterSlider = document.getElementById('sld-water') as HTMLInputElement;
+    waterSlider.value = (world.resources.water).toString(10);
+    waterSlider.addEventListener('input', function () {
+        let value = 0;
+        try {
+            value = parseInt(waterSlider.value, 10);
+            if (Number.isNaN(value)) {
+                return;
+            }
+        } catch (error) {
+            return;
+        }
+
+        world.setWater(value);
+    });
+
+    // Hook up the nutrients slider
+    const nutrientsSlider = document.getElementById('sld-nutrients') as HTMLInputElement;
+    nutrientsSlider.value = (world.resources.nutrients).toString(10);
+    nutrientsSlider.addEventListener('input', function () {
+        let value = 0;
+        try {
+            value = parseInt(nutrientsSlider.value, 10);
+            if (Number.isNaN(value)) {
+                return;
+            }
+        } catch (error) {
+            return;
+        }
+
+        world.setNutrients(value);
     });
 }
-
-// function mousePosition(canvas: HTMLCanvasElement, mouseEvent: MouseEvent) {
-//     const canvasBoundingBox = canvas.getBoundingClientRect();
-//     const canvasOffsetLeft = canvasBoundingBox.left;
-//     const canvasOffsetTop = canvasBoundingBox.top;
-
-//     const canvasWidth = canvas.clientWidth;
-//     const contextWidth = canvas.width;
-//     const xScaler = contextWidth / canvasWidth;
-
-//     const canvasHeight = canvas.clientHeight;
-//     const contextHeight = canvas.height;
-//     const yScaler = contextHeight / canvasHeight;
-
-//     const browserMouseX = mouseEvent.clientX;
-//     const browserMouseY = mouseEvent.clientY;
-
-//     const mouseX = Math.round(xScaler * (browserMouseX - canvasOffsetLeft));
-//     const mouseY = Math.round(yScaler * (browserMouseY - canvasOffsetTop));
-//     return new Vec2(mouseX, mouseY);
-// }
 
 function render(context: CanvasRenderingContext2D, world: World) {
     let oldFillStyle: string | CanvasGradient | CanvasPattern = context.fillStyle;
