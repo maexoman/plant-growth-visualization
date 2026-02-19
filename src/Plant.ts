@@ -429,7 +429,7 @@ export class Plant {
         }));
     }
 
-    update(deltaTime: number) {
+    update(_: number) {
         if (this.#state === 'dead') {
             console.log('dead');
             return;
