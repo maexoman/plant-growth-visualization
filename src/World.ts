@@ -2,7 +2,6 @@
 
 import { Plant, type Environment, type Resources } from "./Plant";
 import { Random } from "./Random";
-import { ResourcePool } from "./ResourcePool";
 import { Vec2 } from "./Vec2";
 
 const SKY_RATIO = 3 / 4;
