@@ -31,6 +31,17 @@ export function parameterToNumber(parameter: Parameter) {
     }
 }
 
+export function parameterToName(parameter: Parameter) {
+    switch (parameter) {
+        case 'very_low': return 'sehr wenig';
+        case 'low': return 'wenig';
+        case 'optimal': return 'optimal';
+        case 'high': return 'viel';
+        case 'very_high': return 'sehr viel';
+        default: throw new Error('unkwon');
+    }
+}
+
 export class World {
     random: Random;
 

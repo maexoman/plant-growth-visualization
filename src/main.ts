@@ -3,7 +3,7 @@ import type { Leaf } from "./Leaf";
 import { Plant } from "./Plant";
 import { Random } from "./Random";
 import { Vec2 } from "./Vec2";
-import { parameterToNumber, World } from "./World";
+import { parameterToName, parameterToNumber, World } from "./World";
 
 
 const offset = new Vec2(0, -10);
@@ -117,6 +117,21 @@ function main() {
     const carbonDioxideSlider = document.getElementById('sld-carbon-dioxide') as HTMLInputElement;
     const waterSlider = document.getElementById('sld-water') as HTMLInputElement;
     function syncWithWorld() {
+        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/<sup>2</sup>)`;
+
+        (document.getElementById('light') as HTMLTableCellElement).innerHTML = `(${parameterToName(world.environment.lightHours)})`;
+        (document.getElementById('temperature') as HTMLTableCellElement).innerHTML = `(${(() => {
+            switch (world.environment.temperature) {
+                case "very_low": return "sehr niedrig 0-15&deg;C";
+                case "low": return "niedrig 15-20&deg;C";
+                case "optimal": return "optimal 20-25&deg;C";
+                case "high": return "hoch 25-35&deg;C";
+                case "very_high": return "sehr hoch 35&deg;C+"
+            }
+        })()})`;
+        (document.getElementById('carbon-dioxide') as HTMLTableCellElement).innerHTML = `(${parameterToName(world.resources.carbonDioxide)})`;
+        (document.getElementById('water') as HTMLTableCellElement).innerHTML = `(${parameterToName(world.resources.water)})`;
+        (document.getElementById('nutrients') as HTMLTableCellElement).innerHTML = `(${parameterToName(world.resources.nutrients)})`;
         sunHourSlider.value = parameterToNumber(world.environment.lightHours).toString(10);
         temperatureSlider.value = parameterToNumber(world.environment.temperature).toString(10);
         carbonDioxideSlider.value = parameterToNumber(world.resources.carbonDioxide).toString(10);

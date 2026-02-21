@@ -6,7 +6,7 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>plant-growth-visual</title>
-  <script type="module" crossorigin src="./assets/index-BL1ZFNEL.js"></script>
+  <script type="module" crossorigin src="./assets/index-CqYNKrvr.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-Bin5KVr8.css">
 </head>
 
@@ -35,14 +35,38 @@
     </div>
   </div>
   <div>
-    <ul>
-      <li><label>Gravitation: </label><input type="range" id="sld-gravity" min="0" max="10" step="1"></li>
-      <li><label>Sonnenstunden: </label><input type="range" id="sld-sun-hours" min="0" max="24" step="2"></li>
-      <li><label>Temperatur: </label><input type="range" id="sld-temperature" min="0" max="40" step="5"></li>
-      <li><label>Wasser: </label><input type="range" id="sld-water" min="0" max="4" step="1"></li>
-      <li><label>CO2: </label><input type="range" id="sld-carbon-dioxide" min="0" max="900" step="100"></li>
-      <li><label>Nährstoffe: </label><input type="range" id="sld-nutrients" min="0" max="4" step="1"></li>
-    </ul>
+    <table>
+      <tr>
+        <td>Gravitation: </td>
+        <td><input type="range" id="sld-gravity" min="0" max="10" step="1"></td>
+        <td id="gravitation"></td>
+      </tr>
+      <tr>
+        <td>Licht: </td>
+        <td><input type="range" id="sld-sun-hours" min="0" max="4" step="1"></td>
+        <td id="light"></td>
+      </tr>
+      <tr>
+        <td>Temperatur: </td>
+        <td><input type="range" id="sld-temperature" min="0" max="4" step="1"></td>
+        <td id="temperature"></td>
+      </tr>
+      <tr>
+        <td>Wasser: </td>
+        <td><input type="range" id="sld-water" min="0" max="4" step="1"></td>
+        <td id="water"></td>
+      </tr>
+      <tr>
+        <td>CO2: </td>
+        <td><input type="range" id="sld-carbon-dioxide" min="0" max="4" step="1"></td>
+        <td id="carbon-dioxide"></td>
+      </tr>
+      <tr>
+        <td>Nährstoffe: </td>
+        <td><input type="range" id="sld-nutrients" min="0" max="4" step="1"></td>
+        <td id="nutrients"></td>
+      </tr>
+    </table>
     <button id="btn-reset">Reset</button>
     <button id="btn-start">Start</button>
   </div>
