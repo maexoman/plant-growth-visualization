@@ -1,6 +1,7 @@
 import type { Segment } from "./Growable";
 import { Vec2 } from "./Vec2";
 
+export type LeafState = 'growing' | 'mature' | 'dead';
 export class Leaf {
     readonly #stemStartPosition: Vec2;
     readonly #stemGrowDirection: Vec2;
@@ -8,37 +9,70 @@ export class Leaf {
     #stemSize: number;
     #stemEndPosition: Vec2;
 
+    #state: LeafState;
+
+    // range: 0 - 100
+    #health: number;
+
     readonly #areaMax: number;
+    #growthPotential: number;
     #area: number;
 
-    constructor(stemInfo: { startPosition: Vec2, growDirection: Vec2 }, stemSizeMax: number, leafAreaMax: number) {
+    constructor(stemInfo: { startPosition: Vec2, growDirection: Vec2 }, growthPotential: number, stemSizeMax: number, leafAreaMax: number) {
         this.#stemStartPosition = stemInfo.startPosition;
         this.#stemGrowDirection = stemInfo.growDirection;
         this.#stemSizeMax = stemSizeMax;
         this.#stemSize = 0;
         this.#stemEndPosition = stemInfo.startPosition;
 
+        this.#state = 'growing';
+
+        this.#health = 10;
+
         this.#areaMax = leafAreaMax;
+        this.#growthPotential = growthPotential;
         this.#area = 0;
     }
 
-    isFullyGrown() {
-        return this.#stemSize >= this.#stemSizeMax && this.#area >= this.#areaMax;
+    setGrowthPotential(potential: number) {
+        this.#growthPotential = potential;
+    }
+
+    decreaseHealth() {
+        if (this.#state === 'dead') {
+            return;
+        }
+        this.#health -= 1;
+        if (this.#health === 0) {
+            this.#state = 'dead';
+        }
+    }
+
+    increaseHealth() {
+        if (this.#state === 'dead') {
+            return;
+        }
+        this.#health += 1;
+    }
+
+    tick() {
     }
 
     grow() {
-        if (this.#stemSize < this.#stemSizeMax) {
+        if (this.#stemSize < this.#growthPotential * this.#stemSizeMax) {
             this.#growStem();
             return;
         }
 
-        if (this.#area < this.#areaMax) {
+        if (this.#area < this.#growthPotential * this.#areaMax) {
             this.#growLeaf();
-            return;
+        } else {
+            this.#state = 'mature';
         }
     }
+
     #growLeaf() {
-        this.#area += 2;
+        this.#area += 1;
     }
 
     #growStem() {
@@ -55,5 +89,9 @@ export class Leaf {
 
     get area() {
         return this.#area;
+    }
+
+    get health() {
+        return this.#health;
     }
 }

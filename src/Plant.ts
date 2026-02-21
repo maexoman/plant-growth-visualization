@@ -1,8 +1,9 @@
 import { Flower } from "./Flower";
 import { Growable } from "./Growable";
 import { Leaf } from "./Leaf";
+import { PlantManager } from "./PlantManager";
 import { Vec2 } from "./Vec2";
-import type { World } from "./World";
+import type { Parameter, World } from "./World";
 
 export type PlantState = 'growing' | 'flowering' | 'dead';
 
@@ -25,14 +26,14 @@ export type GrowthProbabilities = {
 };
 
 export type Resources = {
-    water: number;
-    carbonDioxide: number;
-    nutrients: number;
+    water: Parameter;
+    carbonDioxide: Parameter;
+    nutrients: Parameter;
 };
 
 export type Environment = {
-    lightHours: number;
-    temperature: number;
+    lightHours: Parameter;
+    temperature: Parameter;
 }
 
 export type PlantInfo = {
@@ -47,7 +48,6 @@ export type PlantInfo = {
 
 export type GrowthPolicy = (environment: Environment, resources: Resources, plantInfo: PlantInfo) => GrowthProbabilities;
 
-
 export class Plant {
     readonly #ownerWorld: World;
 
@@ -59,360 +59,23 @@ export class Plant {
     #leafs: Leaf[] = [];
     #flower: Flower | null = null;
 
-    #policy: GrowthPolicy;
+    #stemGrowthPotential: number = 1;
+    #rootGrowthPotential: number = 1;
+    #leafGrowthPotential: number = 1;
+
+    #manager: PlantManager;
+    // #policy: GrowthPolicy;
     constructor(ownerWorld: World) {
         this.#ownerWorld = ownerWorld;
 
         this.#state = 'growing';
-
-        this.#policy = (environment: Environment, resources: Resources, plantInfo: PlantInfo) => {
-            if (plantInfo.state === 'dead') {
-                return {
-                    growthProbabilities: {
-                        stem: 0,
-                        roots: 0,
-                        leafs: 0,
-                        flower: 0,
-                    },
-
-                    creationProbabilities: {
-                        leaf: 0,
-                    },
-
-                    transitionProbabilities: {
-                        toDead: 0,
-                        toFlowering: 0,
-                    }
-                };
-            }
-
-            const OPTIMUM_GROWTH_PROBABILITIES = {
-                stem: 100,
-                roots: 100,
-                leafs: 100,
-                flower: 100,
-            };
-
-            const OPTIMUM_CREATION_PROBABILITIES = {
-                leaf: 4,
-            };
-
-            const growthProbabilities = {
-                stem: OPTIMUM_GROWTH_PROBABILITIES.stem,
-                roots: OPTIMUM_GROWTH_PROBABILITIES.roots,
-                leafs: OPTIMUM_GROWTH_PROBABILITIES.leafs,
-                flower: OPTIMUM_GROWTH_PROBABILITIES.flower,
-            };
-
-            const creationProbabilities = {
-                leaf: OPTIMUM_CREATION_PROBABILITIES.leaf,
-            };
-
-
-            const transitionProbabilities = {
-                toDead: 0,
-                toFlowering: 0,
-            };
-
-            // allowed: step: 2, range: 0 - 24
-            if (environment.lightHours === 0) {
-                growthProbabilities.stem -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 1.00 * creationProbabilities.leaf;
-
-                transitionProbabilities.toDead += plantInfo.normalizedStemLength * (plantInfo.age / 1_000) * 50;
-                transitionProbabilities.toFlowering -= 50;
-            } else if (0 < environment.lightHours && environment.lightHours <= 8) {
-                growthProbabilities.stem -= 0.20 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.50 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering -= 25;
-
-            } else if (8 < environment.lightHours && environment.lightHours <= 16) {
-                // optimum
-                growthProbabilities.stem -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            } else {
-                growthProbabilities.stem -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.05 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            }
-
-            // allowed: step: 5, range: 0 - 40
-            if (environment.temperature < 10) {
-                growthProbabilities.stem -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 1.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += environment.temperature < 5 ? 75 : 50;
-                transitionProbabilities.toFlowering -= 100;
-            } else if (10 <= environment.temperature && environment.temperature <= 20) {
-                growthProbabilities.stem -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.50 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            } else if (20 < environment.temperature && environment.temperature <= 25) {
-                // optimum
-                growthProbabilities.stem -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            } else {
-                growthProbabilities.stem -= 0.99 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.99 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.99 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.99 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.99 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            }
-
-            // allowed: step: 100, range: 0 - 900
-            if (resources.carbonDioxide <= 100) {
-                growthProbabilities.stem -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 1.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 25;
-                transitionProbabilities.toFlowering -= 25;
-            } else if (100 < resources.carbonDioxide && resources.carbonDioxide <= 300) {
-                growthProbabilities.stem -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.50 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.50 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            } else if (300 < resources.carbonDioxide && resources.carbonDioxide <= 600) {
-                // optimum
-                growthProbabilities.stem -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            } else {
-                growthProbabilities.stem -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                growthProbabilities.roots -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                growthProbabilities.leafs -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                growthProbabilities.flower -= 0.05 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                creationProbabilities.leaf -= 0.05 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                transitionProbabilities.toDead += 0;
-                transitionProbabilities.toFlowering += 0;
-            }
-
-            // allowed: sehr wenig (0), wenig (1), gleichmäßig (2), viel (3), sehr viel (4)
-            switch (resources.water) {
-                case 0:
-                    growthProbabilities.stem -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 1.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 25;
-                    transitionProbabilities.toFlowering -= 25;
-                    break;
-
-                case 1:
-                    growthProbabilities.stem -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 0.75 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 0;
-                    transitionProbabilities.toFlowering += 0;
-                    break;
-
-                case 2:
-                    // optimum
-                    growthProbabilities.stem -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 0.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 0;
-                    transitionProbabilities.toFlowering += 0;
-                    break;
-
-                case 3:
-                    growthProbabilities.stem -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 0.75 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 0;
-                    transitionProbabilities.toFlowering += 0;
-                    break;
-
-                case 4:
-                default:
-                    growthProbabilities.stem -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 1.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 25;
-                    transitionProbabilities.toFlowering -= 25;
-                    break;
-            }
-
-            // allowed: sehr wenig (0), wenig (1), gleichmäßig (2), viel (3), sehr viel (4)
-            switch (resources.nutrients) {
-                case 0:
-                    growthProbabilities.stem -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 1.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 25;
-                    transitionProbabilities.toFlowering -= 25;
-                    break;
-
-                case 1:
-                    growthProbabilities.stem -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 0.75 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 0;
-                    transitionProbabilities.toFlowering += 0;
-                    break;
-
-                case 2:
-                    // optimum
-                    growthProbabilities.stem -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 0.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 0.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 0;
-                    transitionProbabilities.toFlowering += 0;
-                    break;
-
-                case 3:
-                    growthProbabilities.stem -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 0.75 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 0.75 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 0;
-                    transitionProbabilities.toFlowering += 0;
-                    break;
-
-                case 4:
-                default:
-                    growthProbabilities.stem -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.stem;
-                    growthProbabilities.roots -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.roots;
-                    growthProbabilities.leafs -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.leafs;
-                    growthProbabilities.flower -= 1.00 * OPTIMUM_GROWTH_PROBABILITIES.flower;
-
-                    creationProbabilities.leaf -= 1.00 * OPTIMUM_CREATION_PROBABILITIES.leaf;
-
-                    transitionProbabilities.toDead += 25;
-                    transitionProbabilities.toFlowering -= 25;
-                    break;
-            }
-
-            // transitionProbabilities.toFlowering += (plantInfo.age / 10_000) * 50;
-            // transitionProbabilities.toFlowering += plantInfo.normalizedStemLength * 25;
-            // transitionProbabilities.toDead += (this.#age / 100_000) * 50;
-            if (plantInfo.normalizedStemLength >= 1) {
-                transitionProbabilities.toFlowering = 99;
-            }
-
-            if (plantInfo.state === 'flowering') {
-                creationProbabilities.leaf = 0;
-            } else {
-                growthProbabilities.flower = 0;
-            }
-
-            return {
-                growthProbabilities: {
-                    stem: Math.round(Math.min(Math.max(0, growthProbabilities.stem), 100)),
-                    roots: Math.round(Math.min(Math.max(0, growthProbabilities.roots), 100)),
-                    leafs: Math.round(Math.min(Math.max(0, growthProbabilities.leafs), 100)),
-                    flower: Math.round(Math.min(Math.max(0, growthProbabilities.flower), 100)),
-                },
-
-                creationProbabilities: {
-                    leaf: Math.round(Math.min(Math.max(0, creationProbabilities.leaf), 100)),
-                },
-
-                transitionProbabilities: {
-                    toDead: Math.round(Math.min(Math.max(0, transitionProbabilities.toDead), 100)),
-                    toFlowering: Math.round(Math.min(Math.max(0, transitionProbabilities.toFlowering), 100)),
-                },
-            };
-        }
+        this.#manager = new PlantManager(this);
 
         this.#stem = new Growable(new Vec2(ownerWorld.middleX, ownerWorld.groundY), {
             segmentMax: this.#ownerWorld.random.int(175, 200),
             segmentSize: 2,
             changeAngleMaxDeg: 2,
+            growthPotential: this.#stemGrowthPotential,
 
             sunInfluence: { xInfluence: -3, yInfluence: -3 },
             gravityInfluence: { xInfluence: 0, yInfluence: -1 },
@@ -422,11 +85,123 @@ export class Plant {
             segmentMax: this.#ownerWorld.random.int(175, 200),
             segmentSize: 1,
             changeAngleMaxDeg: this.#ownerWorld.random.int(5, 15),
+            growthPotential: this.#rootGrowthPotential,
 
             sunInfluence: { xInfluence: 5, yInfluence: 5 },
             gravityInfluence: { xInfluence: 0, yInfluence: 1 },
             randomJitterInfluence: { xInfluence: 5, yInfluence: 5 },
         }));
+
+        this.#manager.manage(this.#ownerWorld.environment, this.#ownerWorld.resources);
+    }
+
+    die() {
+        this.#state = 'dead';
+    }
+
+    isGrowing() {
+        return this.#state === 'growing';
+    }
+
+    isFlowering() {
+        return this.#state === 'flowering';
+    }
+
+    isStemFullyGrown() {
+        return this.#stem.isFullyGrown();
+    }
+
+    beginFlowering() {
+        if (this.#state === 'dead') {
+            return;
+        }
+
+        if (this.#flower === null) {
+            this.#flower = new Flower(this.#ownerWorld.random, this.#stem.endPosition);
+        }
+        this.#state = 'flowering';
+    }
+
+    growFlower() {
+        if (this.#state !== 'flowering') {
+            return;
+        }
+        if (this.#flower === null) {
+            return;
+        }
+        this.#flower.grow();
+    }
+
+    growStem() {
+        if (this.#state !== 'growing') {
+            return;
+        }
+        this.#stem.grow(this.#ownerWorld);
+    }
+
+    leafCount() {
+        return this.#leafs.length;
+    }
+
+    stemLength() {
+        return this.#stem.length;
+    }
+
+    growRoots() {
+        if (this.#state !== 'growing') {
+            return;
+        }
+        this.#roots.forEach(r => r.grow(this.#ownerWorld));
+    }
+
+    createLeaf() {
+        if (this.#state !== 'growing') {
+            return;
+        }
+
+        const sign = this.#leafs.length % 2 == 0 ? 1 : -1;
+        const auxBud = this.#stem.calculateAuxillaryBud(sign * this.#ownerWorld.random.int(20, 60));
+        if (auxBud === null) {
+            return;
+        }
+
+        this.#leafs.push(
+            new Leaf(auxBud, this.#leafGrowthPotential, this.#ownerWorld.random.int(25, 50), this.#ownerWorld.random.int(30, 50))
+        );
+    }
+
+    growLeafs() {
+        this.#leafs.forEach(l => l.grow());
+    }
+
+    setStemSizePotential(potential: number) {
+        this.#stemGrowthPotential = potential;
+        this.#stem.setGrowthPotential(potential);
+    }
+
+    setRootSizePotential(potential: number) {
+        this.#rootGrowthPotential = potential;
+        this.#roots.forEach(r => r.setGrowthPotential(potential));
+    }
+
+    setLeafSizePotential(leafSizePotential: number) {
+        this.#leafGrowthPotential = leafSizePotential;
+        this.#leafs.forEach(l => l.setGrowthPotential(leafSizePotential));
+    }
+
+    increaseLeafHealth() {
+        this.#leafs.forEach(l => l.increaseHealth());
+    }
+
+    decreaseLeafHealth() {
+        this.#leafs.forEach(l => l.decreaseHealth());
+    }
+
+    tick() {
+        this.#manager.tick();
+        this.#age += 1;
+        this.#stem.tick();
+        this.#roots.forEach(r => r.tick());
     }
 
     update(_: number) {
@@ -435,59 +210,8 @@ export class Plant {
             return;
         }
 
-        console.log('render');
-        this.#age += 1;
-
-        const random = this.#ownerWorld.random;
-        const probabilities = this.#policy(this.#ownerWorld.environment, this.#ownerWorld.resources, {
-            age: this.#age,
-            state: this.#state,
-            normalizedStemLength: this.#stem.normalizedLength,
-            normalizedRootLength: this.#roots.length === 0 ? 0 : this.#roots[0].normalizedLength,
-            leafCount: this.#leafs.length,
-        });
-
-        // console.log(probabilities);
-
-        if (random.int(1, 100) < probabilities.growthProbabilities.stem) {
-            this.#stem.grow(this.#ownerWorld);
-        }
-
-        if (random.int(1, 100) < probabilities.growthProbabilities.roots) {
-            this.#roots.forEach(r => r.grow(this.#ownerWorld));
-        }
-
-        if (random.int(1, 100) < probabilities.growthProbabilities.leafs) {
-            this.#leafs.forEach(l => l.grow());
-        }
-
-        if (random.int(1, 100) < probabilities.growthProbabilities.flower) {
-            if (this.#flower !== null) {
-                this.#flower.grow();
-            }
-        }
-
-        if (random.int(1, 100) < probabilities.creationProbabilities.leaf) {
-            const sign = this.#leafs.length % 2 == 0 ? 1 : -1;
-            const auxBud = this.#stem.calculateAuxillaryBud(sign * this.#ownerWorld.random.int(20, 60));
-            if (auxBud === null) {
-                return;
-            }
-            this.#leafs.push(
-                new Leaf(auxBud, this.#ownerWorld.random.int(25, 50), this.#ownerWorld.random.int(30, 50))
-            );
-        }
-
-        if (random.int(1, 100) < probabilities.transitionProbabilities.toFlowering) {
-            if (this.#flower === null) {
-                this.#state = 'flowering';
-                this.#flower = new Flower(random, this.#stem.endPosition);
-            }
-        }
-
-        if (random.int(1, 100) < probabilities.transitionProbabilities.toDead) {
-            this.#state = 'dead';
-        }
+        this.#manager.manage(this.#ownerWorld.environment, this.#ownerWorld.resources);
+        this.tick();
     }
 
     get state() {

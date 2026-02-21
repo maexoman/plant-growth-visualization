@@ -3,7 +3,7 @@ import type { Leaf } from "./Leaf";
 import { Plant } from "./Plant";
 import { Random } from "./Random";
 import { Vec2 } from "./Vec2";
-import { World } from "./World";
+import { parameterToNumber, World } from "./World";
 
 
 const offset = new Vec2(0, -10);
@@ -74,6 +74,7 @@ function main() {
         ghostRendered = false;
 
         world.reset();
+        syncWithWorld();
     });
 
     // Hook up the sun slider
@@ -110,9 +111,22 @@ function main() {
         world.setGravity(value);
     });
 
-    // Hook up the sun-hour slider
+    const nutrientsSlider = document.getElementById('sld-nutrients') as HTMLInputElement;
     const sunHourSlider = document.getElementById('sld-sun-hours') as HTMLInputElement;
-    sunHourSlider.value = (world.environment.lightHours).toString(10);
+    const temperatureSlider = document.getElementById('sld-temperature') as HTMLInputElement;
+    const carbonDioxideSlider = document.getElementById('sld-carbon-dioxide') as HTMLInputElement;
+    const waterSlider = document.getElementById('sld-water') as HTMLInputElement;
+    function syncWithWorld() {
+        sunHourSlider.value = parameterToNumber(world.environment.lightHours).toString(10);
+        temperatureSlider.value = parameterToNumber(world.environment.temperature).toString(10);
+        carbonDioxideSlider.value = parameterToNumber(world.resources.carbonDioxide).toString(10);
+        waterSlider.value = parameterToNumber(world.resources.water).toString(10);
+        nutrientsSlider.value = parameterToNumber(world.resources.nutrients).toString(10);
+    }
+
+    syncWithWorld();
+
+    // Hook up the sun-hour slider
     sunHourSlider.addEventListener('input', function () {
         let value = 0;
         try {
@@ -124,12 +138,11 @@ function main() {
             return;
         }
 
+        syncWithWorld();
         world.setSunHours(value);
     });
 
     // Hook up the temerature slider
-    const temperatureSlider = document.getElementById('sld-temperature') as HTMLInputElement;
-    temperatureSlider.value = (world.environment.temperature).toString(10);
     temperatureSlider.addEventListener('input', function () {
         let value = 0;
         try {
@@ -141,12 +154,11 @@ function main() {
             return;
         }
 
+        syncWithWorld();
         world.setTemperature(value);
     });
 
     // Hook up the carbon dioxide slider
-    const carbonDioxideSlider = document.getElementById('sld-carbon-dioxide') as HTMLInputElement;
-    carbonDioxideSlider.value = (world.resources.carbonDioxide).toString(10);
     carbonDioxideSlider.addEventListener('input', function () {
         let value = 0;
         try {
@@ -158,12 +170,11 @@ function main() {
             return;
         }
 
+        syncWithWorld();
         world.setCarbonDioxide(value);
     });
 
     // Hook up the water slider
-    const waterSlider = document.getElementById('sld-water') as HTMLInputElement;
-    waterSlider.value = (world.resources.water).toString(10);
     waterSlider.addEventListener('input', function () {
         let value = 0;
         try {
@@ -175,12 +186,11 @@ function main() {
             return;
         }
 
+        syncWithWorld();
         world.setWater(value);
     });
 
     // Hook up the nutrients slider
-    const nutrientsSlider = document.getElementById('sld-nutrients') as HTMLInputElement;
-    nutrientsSlider.value = (world.resources.nutrients).toString(10);
     nutrientsSlider.addEventListener('input', function () {
         let value = 0;
         try {
@@ -192,6 +202,7 @@ function main() {
             return;
         }
 
+        syncWithWorld();
         world.setNutrients(value);
     });
 }
@@ -333,7 +344,16 @@ function renderPlant(context: CanvasRenderingContext2D, world: World, plant: Pla
     renderLeafs(context, world, plant.leafs, {
         positionOffset: offset,
 
-        color: "#008000",
+        colors: [
+            "#C48000",
+            "#A88000",
+            "#8C8000",
+            "#708000",
+            "#548000",
+            "#388000",
+            "#1C8000",
+            "#008000"
+        ],
         borderWidth: 2,
         borderColor: "#000000"
     });
@@ -378,7 +398,7 @@ function renderGhostPlant(context: CanvasRenderingContext2D, world: World, plant
     renderLeafs(context, world, plant.leafs, {
         positionOffset: offset,
 
-        color: ghostColor,
+        colors: [ghostColor],
         borderWidth: 2,
         borderColor: ghostColor
     });
@@ -400,6 +420,17 @@ function renderGhostPlant(context: CanvasRenderingContext2D, world: World, plant
     });
 }
 
+const lerp = (x: number, y: number, a: number) => x * (1 - a) + y * a;
+const invlerp = (x: number, y: number, a: number) => clamp((a - x) / (y - x));
+const clamp = (a: number, min = 0, max = 1) => Math.min(max, Math.max(min, a));
+const range = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    a: number
+) => lerp(x2, y2, invlerp(x1, y1, a));
+
 function renderLeafs(context: CanvasRenderingContext2D, world: World, leafs: Leaf[], options: LeafRenderingOptions) {
     for (const leaf of leafs) {
         if (leaf.area <= 0) {
@@ -409,16 +440,19 @@ function renderLeafs(context: CanvasRenderingContext2D, world: World, leafs: Lea
         const position = leaf.stemSegment.endPosition;
         const isLeftLeaf = position.x <= world.middleX;
 
+        const colorIndex = Math.round(range(1, 10, 0, options.colors.length - 1, leaf.health));
+        const color = options.colors[colorIndex];
+
         const offsetPosition = Vec2.add(position, options.positionOffset);
         if (isLeftLeaf) {
             renderLeftLeaf(context, offsetPosition, leaf.area, {
-                color: options.color,
+                color: color,
                 borderColor: options.borderColor,
                 borderWidth: options.borderWidth,
             });
         } else {
             renderRightLeaf(context, offsetPosition, leaf.area, {
-                color: options.color,
+                color: color,
                 borderColor: options.borderColor,
                 borderWidth: options.borderWidth,
             });
@@ -624,11 +658,11 @@ function renderFlower(context: CanvasRenderingContext2D, flower: Flower | null, 
 
 type LeafRenderingOptions = {
     positionOffset: Vec2;
-    color: string;
+    colors: string[];
     borderWidth: number;
     borderColor: string;
 }
-function renderLeftLeaf(context: CanvasRenderingContext2D, position: Vec2, scale: number, options: Pick<LeafRenderingOptions, 'color' | 'borderColor' | 'borderWidth'>) {
+function renderLeftLeaf(context: CanvasRenderingContext2D, position: Vec2, scale: number, options: Pick<LeafRenderingOptions, 'borderColor' | 'borderWidth'> & Record<'color', string>) {
     const oldFillStyle = context.fillStyle;
     const oldLineWidth = context.lineWidth;
     const oldStrokeStyle = context.strokeStyle;
@@ -661,7 +695,7 @@ function renderLeftLeaf(context: CanvasRenderingContext2D, position: Vec2, scale
     context.fillStyle = oldFillStyle;
 }
 
-function renderRightLeaf(context: CanvasRenderingContext2D, position: Vec2, scale: number, options: Pick<LeafRenderingOptions, 'color' | 'borderColor' | 'borderWidth'>) {
+function renderRightLeaf(context: CanvasRenderingContext2D, position: Vec2, scale: number, options: Pick<LeafRenderingOptions, 'borderColor' | 'borderWidth'> & Record<'color', string>) {
     const oldFillStyle = context.fillStyle;
     const oldLineWidth = context.lineWidth;
     const oldStrokeStyle = context.strokeStyle;

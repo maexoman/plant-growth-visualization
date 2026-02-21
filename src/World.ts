@@ -8,6 +8,29 @@ const SKY_RATIO = 3 / 4;
 const SUN_RATIO = 0 / 8;
 const SUN_MOVEMENT_MAX = 3 / 4;
 
+export type Parameter = 'very_low' | 'low' | 'optimal' | 'high' | 'very_high';
+function numberToParameter(number: number) {
+    switch (number) {
+        case 0: return 'very_low';
+        case 1: return 'low';
+        case 2: return 'optimal';
+        case 3: return 'high';
+        case 4: return 'very_high';
+        default: return null;
+    }
+}
+
+export function parameterToNumber(parameter: Parameter) {
+    switch (parameter) {
+        case 'very_low': return 0;
+        case 'low': return 1;
+        case 'optimal': return 2;
+        case 'high': return 3;
+        case 'very_high': return 4;
+        default: throw new Error('unkwon');
+    }
+}
+
 export class World {
     random: Random;
 
@@ -22,11 +45,11 @@ export class World {
     #gravity: Vec2;
 
     #sunPosition: Vec2;
-    #lightHours: number;
-    #temperature: number;
-    #water: number;
-    #nutrients: number;
-    #carbonDioxide: number;
+    #lightHours: Parameter;
+    #temperature: Parameter;
+    #water: Parameter;
+    #nutrients: Parameter;
+    #carbonDioxide: Parameter;
 
     #plant: Plant;
 
@@ -41,12 +64,12 @@ export class World {
 
         this.#gravity = new Vec2(0, -10);
         this.#sunPosition = new Vec2(this.middleX, this.sunY);
-        this.#lightHours = 14;
-        this.#temperature = 22;
-        this.#carbonDioxide = 400;
 
-        this.#nutrients = 2;
-        this.#water = 2;
+        this.#lightHours = 'optimal';
+        this.#temperature = 'optimal';
+        this.#carbonDioxide = 'optimal';
+        this.#nutrients = 'optimal';
+        this.#water = 'optimal';
 
         this.#plant = new Plant(this);
     }
@@ -88,64 +111,57 @@ export class World {
         this.#gravity = new Vec2(0, -gravity);
     }
 
+    #restoreOptimum() {
+        this.#lightHours = 'optimal';
+        this.#temperature = 'optimal';
+        this.#water = 'optimal';
+        this.#nutrients = 'optimal';
+        this.#carbonDioxide = 'optimal';
+    }
+
     setSunHours(sunHours: number) {
-        const isInBounds = 0 <= sunHours && sunHours <= 24;
-        if (!isInBounds) {
-            console.warn(`sun hours not in range [0, 24]. sun hours: ${sunHours}`);
+        const temp = numberToParameter(sunHours);
+        this.#restoreOptimum();
+        if (temp === null) {
             return;
         }
-        const isMulipleOfTwo = sunHours % 2 == 0;
-        if (!isMulipleOfTwo) {
-            console.warn(`sun hours must be a multiple of two`);
-            return;
-        }
-        this.#lightHours = sunHours;
+        this.#lightHours = temp;
     }
 
     setTemperature(temperature: number) {
-        const isInBounds = 0 <= temperature && temperature <= 40;
-        if (!isInBounds) {
-            console.warn(`temperature not in range [0, 40]. temperature: ${temperature}`);
+        const temp = numberToParameter(temperature);
+        this.#restoreOptimum();
+        if (temp === null) {
             return;
         }
-        const isMulipleOfFive = temperature % 5 == 0;
-        if (!isMulipleOfFive) {
-            console.warn(`temperature must be a multiple of five`);
-            return;
-        }
-        this.#temperature = temperature;
+        this.#temperature = temp;
     }
 
     setCarbonDioxide(carbonDioxide: number) {
-        const isInBounds = 0 <= carbonDioxide && carbonDioxide <= 40;
-        if (!isInBounds) {
-            console.warn(`carbonDioxide not in range [0, 900]. carbonDioxide: ${carbonDioxide}`);
+        const temp = numberToParameter(carbonDioxide);
+        this.#restoreOptimum();
+        if (temp === null) {
             return;
         }
-        const isMulipleOfFive = carbonDioxide % 100 == 0;
-        if (!isMulipleOfFive) {
-            console.warn(`carbonDioxide must be a multiple of 100`);
-            return;
-        }
-        this.#carbonDioxide = carbonDioxide;
+        this.#carbonDioxide = temp;
     }
 
     setWater(water: number) {
-        const isInBounds = 0 <= water && water <= 4;
-        if (!isInBounds) {
-            console.warn(`water not in range [0, 4]. water: ${water}`);
+        const temp = numberToParameter(water);
+        this.#restoreOptimum();
+        if (temp === null) {
             return;
         }
-        this.#water = water;
+        this.#water = temp;
     }
 
     setNutrients(nutrients: number) {
-        const isInBounds = 0 <= nutrients && nutrients <= 4;
-        if (!isInBounds) {
-            console.warn(`nutrients not in range [0, 4]. nutrients: ${nutrients}`);
+        const temp = numberToParameter(nutrients);
+        this.#restoreOptimum();
+        if (temp === null) {
             return;
         }
-        this.#nutrients = nutrients;
+        this.#nutrients = temp;
     }
 
     update(deltaTime: number) {
@@ -154,9 +170,13 @@ export class World {
 
     reset() {
         this.random = new Random(this.random.seed);
+        this.#lightHours = 'optimal';
+        this.#temperature = 'optimal';
+        this.#water = 'optimal';
+        this.#carbonDioxide = 'optimal';
+        this.#nutrients = 'optimal';
         this.#plant = new Plant(this);
     }
-
 
     isExposedToSun(position: Vec2) {
         return position.y >= this.groundY;

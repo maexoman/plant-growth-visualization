@@ -6,6 +6,8 @@ export type GrowableOptions = {
     segmentSize: number;
     changeAngleMaxDeg: number;
 
+    growthPotential: number;
+
     sunInfluence: Influence;
     gravityInfluence: Influence;
     randomJitterInfluence: Influence;
@@ -21,10 +23,11 @@ export type Segment = {
     endPosition: Vec2;
 };
 
+export type GrowableState = 'growing' | 'mature';
+
 export class Growable {
     readonly #startPosition: Vec2;
 
-    readonly #segmentMax: number;
     readonly #segmentSize: number;
     readonly #changeAngleMaxRad: number;
 
@@ -32,11 +35,14 @@ export class Growable {
     readonly #gravityInfluence: Influence;
     readonly #randomJitterInfluence: Influence;
 
+    readonly #segmentMax: number;
+
+    #state: GrowableState;
+    #growthPotential: number;
     #segments: Segment[];
     #lastGrowDirection: Vec2 | null = null;
 
     constructor(startPosition: Vec2, options: GrowableOptions) {
-        this.#segmentMax = options.segmentMax;
         this.#segmentSize = options.segmentSize;
         this.#changeAngleMaxRad = degToRad(options.changeAngleMaxDeg);
 
@@ -45,18 +51,41 @@ export class Growable {
         this.#gravityInfluence = options.gravityInfluence;
         this.#randomJitterInfluence = options.randomJitterInfluence;
 
+        this.#state = 'growing';
+        this.#segmentMax = options.segmentMax;
+        this.#growthPotential = options.growthPotential;
         this.#segments = [];
     }
 
+    tick() {
+
+    }
+
     isFullyGrown() {
-        return this.segments.length >= this.#segmentMax;
+        return this.segments.length >= this.#growthPotential * this.#segmentMax;
+    }
+
+    setGrowthPotential(potential: number) {
+        if (this.#state !== 'growing') {
+            return;
+        }
+        this.#growthPotential = potential;
     }
 
     grow(world: World) {
-        if (this.isFullyGrown()) {
+        if (this.#state !== 'growing') {
             return;
         }
 
+        if (this.isFullyGrown()) {
+            this.#state = 'mature';
+            return;
+        }
+
+        this.#grow(world);
+    }
+
+    #grow(world: World) {
         const newSegmentStartPosition = this.endPosition;
 
         let normalizedGrowDirection = this.#calculateNormalizedGrowDirection(world);
