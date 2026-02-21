@@ -39,7 +39,7 @@ function main() {
             render(context, world);
             if (world.plant.state === 'dead') {
                 if (ghostRendered === false) {
-                    renderGhostPlant(ghostContext, world, world.plant);
+                    renderGhostPlant(ghostContext, world.plant);
                     ghostCanvas.style.display = 'block';
                     deadX.style.display = 'flex';
                     ghostRendered = true;
@@ -117,7 +117,7 @@ function main() {
     const carbonDioxideSlider = document.getElementById('sld-carbon-dioxide') as HTMLInputElement;
     const waterSlider = document.getElementById('sld-water') as HTMLInputElement;
     function syncWithWorld() {
-        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/<sup>2</sup>)`;
+        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/s<sup>2</sup>)`;
 
         (document.getElementById('light') as HTMLTableCellElement).innerHTML = `(${parameterToName(world.environment.lightHours)})`;
         (document.getElementById('temperature') as HTMLTableCellElement).innerHTML = `(${(() => {
@@ -311,7 +311,7 @@ function render(context: CanvasRenderingContext2D, world: World) {
     drawEllipseByCenter(context, world.middleX, height - (world.groundY - 15), 15, 20);
     context.fillStyle = oldFillStyle;
 
-    renderPlant(context, world, world.plant);
+    renderPlant(context, world.plant);
 }
 
 function drawEllipseByCenter(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number) {
@@ -337,7 +337,7 @@ function drawEllipse(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
     ctx.fill();
 }
 
-function renderPlant(context: CanvasRenderingContext2D, world: World, plant: Plant) {
+function renderPlant(context: CanvasRenderingContext2D, plant: Plant) {
     renderRoots(context, plant, {
         positionOffset: offset,
 
@@ -356,7 +356,7 @@ function renderPlant(context: CanvasRenderingContext2D, world: World, plant: Pla
         borderColor: "#000000"
     });
 
-    renderLeafs(context, world, plant.leafs, {
+    renderLeafs(context, plant.leafs, {
         positionOffset: offset,
 
         colors: [
@@ -390,7 +390,7 @@ function renderPlant(context: CanvasRenderingContext2D, world: World, plant: Pla
     });
 }
 
-function renderGhostPlant(context: CanvasRenderingContext2D, world: World, plant: Plant) {
+function renderGhostPlant(context: CanvasRenderingContext2D, plant: Plant) {
     const ghostColor = '#ffffff';
     renderRoots(context, plant, {
         positionOffset: offset,
@@ -410,7 +410,7 @@ function renderGhostPlant(context: CanvasRenderingContext2D, world: World, plant
         borderColor: "#00000000"
     });
 
-    renderLeafs(context, world, plant.leafs, {
+    renderLeafs(context, plant.leafs, {
         positionOffset: offset,
 
         colors: [ghostColor],
@@ -446,14 +446,14 @@ const range = (
     a: number
 ) => lerp(x2, y2, invlerp(x1, y1, a));
 
-function renderLeafs(context: CanvasRenderingContext2D, world: World, leafs: Leaf[], options: LeafRenderingOptions) {
+function renderLeafs(context: CanvasRenderingContext2D, leafs: Leaf[], options: LeafRenderingOptions) {
     for (const leaf of leafs) {
         if (leaf.area <= 0) {
             continue;
         }
 
         const position = leaf.stemSegment.endPosition;
-        const isLeftLeaf = position.x <= world.middleX;
+        const isLeftLeaf = leaf.leafDirection === 'left';
 
         const colorIndex = Math.round(range(1, 10, 0, options.colors.length - 1, leaf.health));
         const color = options.colors[colorIndex];

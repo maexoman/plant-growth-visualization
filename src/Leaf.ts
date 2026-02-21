@@ -34,6 +34,10 @@ export class Leaf {
         this.#area = 0;
     }
 
+    get leafDirection() {
+        return this.#stemGrowDirection.x <= 0 ? 'left' : 'right';
+    }
+
     setGrowthPotential(potential: number) {
         this.#growthPotential = potential;
     }
