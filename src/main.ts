@@ -109,6 +109,7 @@ function main() {
         }
 
         world.setGravity(value);
+        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/s<sup>2</sup>)`;
     });
 
     const nutrientsSlider = document.getElementById('sld-nutrients') as HTMLInputElement;
