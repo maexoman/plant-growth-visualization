@@ -1,24 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full">
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>plant-growth-visual</title>
-  <script type="module" crossorigin src="./assets/index-CoeZ2JBX.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Bin5KVr8.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script type="module" crossorigin src="./assets/index-kGMF8WU3.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BvuqEkke.css">
 </head>
 
-<body class="flex">
-  <div class="relative inline-block">
-    <div class="absolute flex justify-center w-full opacity-0 h-16 bg-amber-300">
-      <input type="range" id="sld-sun" value="0" min="-100" max="100" class="cursor-pointer w-3/4">
+<body class="flex h-full">
+  <div class="relative inline-block h-full">
+    <div class="absolute flex justify-center w-full h-32 opacity-0">
+      <input type="range" id="sld-sun" value="0" min="-100" max="100" class="cursor-pointer w-3/4 h-full large-slider">
     </div>
 
-    <canvas id="canvas" width="960" height="1080" style="height: 100vh; width: auto; border: 1px solid black;"></canvas>
+    <canvas id="canvas" width="960" height="1080" class="h-full w-auto border-r-4"></canvas>
     <canvas id="ghost-canvas" width="960" height="1080"
-      class="absolute top-0 left-0 opacity-50 hidden pointer-events-none" style="height: 100vh; width: auto;"></canvas>
+      class="absolute top-0 left-0 opacity-50 hidden pointer-events-none h-full w-auto"></canvas>
     <div id="dead-x" class="absolute justify-center top-2/3 left-0 right-0 bottom-0 hidden pointer-events-none">
       <svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.0" width="100"
         height="100" id="svg8978">
@@ -34,41 +37,54 @@
       </svg>
     </div>
   </div>
-  <div>
-    <table>
-      <tr>
-        <td>Gravitation: </td>
-        <td><input type="range" id="sld-gravity" min="0" max="10" step="1"></td>
-        <td id="gravitation"></td>
-      </tr>
-      <tr>
-        <td>Licht: </td>
-        <td><input type="range" id="sld-sun-hours" min="0" max="4" step="1"></td>
-        <td id="light"></td>
-      </tr>
-      <tr>
-        <td>Temperatur: </td>
-        <td><input type="range" id="sld-temperature" min="0" max="4" step="1"></td>
-        <td id="temperature"></td>
-      </tr>
-      <tr>
-        <td>Wasser: </td>
-        <td><input type="range" id="sld-water" min="0" max="4" step="1"></td>
-        <td id="water"></td>
-      </tr>
-      <tr>
-        <td>Kohlenstoffdioxid: </td>
-        <td><input type="range" id="sld-carbon-dioxide" min="0" max="4" step="1"></td>
-        <td id="carbon-dioxide"></td>
-      </tr>
-      <tr>
-        <td>Nährstoffe: </td>
-        <td><input type="range" id="sld-nutrients" min="0" max="4" step="1"></td>
-        <td id="nutrients"></td>
-      </tr>
+  <div class="flex flex-1 flex-col p-4 justify-center">
+    <h1 class="text-2xl font-extrabold pb-2">Einstellungen</h1>
+    <table class="w-full">
+      <tbody class="w-full gap-2">
+        <tr class="pb-10">
+          <td>Gravitation: </td>
+          <td>
+            <input type="range" id="sld-gravity" min="0" max="10" step="1">
+          </td>
+          <td class="text-right" id="gravitation"></td>
+        </tr>
+        <tr>
+          <td>Licht: </td>
+          <td><input type="range" id="sld-sun-hours" min="0" max="4" step="1"></td>
+          <td class="text-right" id="light"></td>
+        </tr>
+        <tr>
+          <td>Temperatur: </td>
+          <td><input type="range" id="sld-temperature" min="0" max="4" step="1"></td>
+          <td class="text-right" id="temperature"></td>
+        </tr>
+        <tr>
+          <td>Wasser: </td>
+          <td><input type="range" id="sld-water" min="0" max="4" step="1"></td>
+          <td class="text-right" id="water"></td>
+        </tr>
+        <tr>
+          <td>Kohlenstoffdioxid: </td>
+          <td><input type="range" id="sld-carbon-dioxide" min="0" max="4" step="1"></td>
+          <td class="text-right" id="carbon-dioxide"></td>
+        </tr>
+        <tr>
+          <td>Nährstoffe: </td>
+          <td><input type="range" id="sld-nutrients" min="0" max="4" step="1"></td>
+          <td class="text-right" id="nutrients"></td>
+        </tr>
+      </tbody>
     </table>
-    <button id="btn-reset">Reset</button>
-    <button id="btn-start">Start</button>
+    <div class="flex gap-4 pt-4">
+      <button id="btn-reset" class="border-black bg-red-600 text-white  border w-1/2 p-1.5 cursor-pointer rounded-md"><i
+          class="fa-solid fa-rotate-left"></i> Reset</button>
+      <button id="btn-pause"
+        class="border-black bg-yellow-600 text-white hidden border w-1/2 p-1.5 cursor-pointer rounded-md"><i
+          class="fa-solid fa-pause"></i> Pause</button>
+      <button id="btn-start"
+        class="border-black bg-green-600 text-white border w-1/2 p-1.5 cursor-pointer rounded-md"><i
+          class="fa-solid fa-play"></i> Start</button>
+    </div>
   </div>
 </body>
 

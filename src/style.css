@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+.large-slider {
+    -webkit-appearance: none;
+    height: 100%;
+    outline: none;
+    opacity: 0;
+}
+
+.large-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 8rem;
+    height: 8rem;
+    cursor: pointer;
+
+}
+
+.large-slider::-moz-range-thumb {
+    width: 8rem;
+    height: 8rem;
+    cursor: pointer;
+}

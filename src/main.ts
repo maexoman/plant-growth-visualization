@@ -60,6 +60,18 @@ function main() {
     const startButton = document.getElementById('btn-start') as HTMLButtonElement;
     startButton.addEventListener('click', function () {
         update = true;
+
+        (document.getElementById('btn-pause') as HTMLButtonElement)
+            .style.display = 'block';
+    });
+
+    // Hook up the start button
+    const pauseButton = document.getElementById('btn-pause') as HTMLButtonElement;
+    pauseButton.addEventListener('click', function () {
+        update = false;
+
+        (document.getElementById('btn-pause') as HTMLButtonElement)
+            .style.display = 'none';
     });
 
     // Hook up the restart button
@@ -71,6 +83,9 @@ function main() {
         ghostCanvas.style.display = 'none';
         ghostContext.clearRect(0, 0, ghostContext.canvas.width, ghostContext.canvas.height);
         ghostRendered = false;
+
+        (document.getElementById('btn-pause') as HTMLButtonElement)
+            .style.display = 'none';
 
         world.reset();
         syncWithWorld();
