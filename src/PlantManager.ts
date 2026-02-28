@@ -31,6 +31,8 @@ export class PlantManager {
         this.#plant = plant;
     }
 
+    #stemHealthChangeDirection: 'worsen' | 'neutral' | 'better' = 'neutral';
+    #stemHealthTicks: number = 0;
     #stemTicks: number = 0;
     #rootTicks: number = 0;
     #leafTicks: number = 0;
@@ -62,6 +64,12 @@ export class PlantManager {
             this.#leafHealthTicks = 0;
         } else {
             this.#leafHealthTicks += 1;
+        }
+
+        if (this.#stemHealthChangeDirection === 'neutral') {
+            this.#stemHealthTicks = 0;
+        } else {
+            this.#stemHealthTicks += 1;
         }
 
         if (this.#stemTicks >= this.#stemGrowTicks) {
@@ -107,6 +115,18 @@ export class PlantManager {
                     break;
             }
             this.#leafHealthTicks = 0;
+        }
+
+        if (this.#stemHealthTicks >= 10) {
+            switch (this.#stemHealthChangeDirection) {
+                case "worsen":
+                    this.#plant.decreaseStemHealth();
+                    break;
+                case "better":
+                    this.#plant.increaseStemHealth();
+                    break;
+            }
+            this.#stemHealthTicks = 0;
         }
     }
 
@@ -179,6 +199,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 100;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -193,6 +214,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1.25);
                 this.#plant.setLeafSizePotential(0.75);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -207,6 +229,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -221,6 +244,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(0.5);
                 this.#plant.setLeafSizePotential(0.75);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -238,6 +262,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 1_000;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'worsen';
                 return;
         }
@@ -258,6 +283,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 100;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -272,6 +298,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(0.75);
                 this.#plant.setLeafSizePotential(0.75);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -286,6 +313,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -300,6 +328,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1.125);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -315,6 +344,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1.25);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'better';
                 return;
         }
@@ -335,6 +365,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 100;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -349,6 +380,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(0.75);
                 this.#plant.setLeafSizePotential(0.75);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -363,6 +395,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -377,6 +410,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(0.75);
                 this.#plant.setLeafSizePotential(0.75);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -393,6 +427,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 100;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
         }
@@ -413,6 +448,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 100;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -427,6 +463,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1.0);
                 this.#plant.setLeafSizePotential(1.0);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -441,6 +478,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -455,6 +493,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1.0);
                 this.#plant.setLeafSizePotential(1.0);
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -471,6 +510,7 @@ export class PlantManager {
 
                 this.#ticksUntilDeath = 100;
 
+                this.#stemHealthChangeDirection = 'neutral';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
         }
@@ -489,6 +529,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1.0);
                 this.#plant.setLeafSizePotential(0.5);
 
+                this.#stemHealthChangeDirection = 'worsen';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -503,6 +544,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1.0);
                 this.#plant.setLeafSizePotential(0.75);
 
+                this.#stemHealthChangeDirection = 'worsen';
                 this.#leafHealthChangeDirection = 'neutral';
                 return;
 
@@ -517,6 +559,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'better';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -531,6 +574,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'better';
                 this.#leafHealthChangeDirection = 'better';
                 return;
 
@@ -545,6 +589,7 @@ export class PlantManager {
                 this.#plant.setRootSizePotential(1);
                 this.#plant.setLeafSizePotential(1);
 
+                this.#stemHealthChangeDirection = 'better';
                 this.#leafHealthChangeDirection = 'better';
                 return;
         }
@@ -564,6 +609,4 @@ export class PlantManager {
             this.#lastDecisionFoundation.resources.carbonDioxide !== resources.carbonDioxide
         );
     }
-
-
 }

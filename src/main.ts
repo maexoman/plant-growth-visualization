@@ -1,5 +1,4 @@
 import type { Flower } from "./Flower";
-import type { Leaf } from "./Leaf";
 import { Plant } from "./Plant";
 import { Random } from "./Random";
 import { Vec2 } from "./Vec2";
@@ -352,13 +351,33 @@ function renderPlant(context: CanvasRenderingContext2D, plant: Plant) {
         positionOffset: offset,
 
         thickness: 8,
-        color: "#008000",
+        colors: [
+            "#00C600",
+            "#00BC00",
+            "#00B200",
+            "#00A800",
+            "#009E00",
+            "#009400",
+            "#008A00",
+            "#008000",
+        ],
         borderWidth: 2,
         borderColor: "#000000"
     });
 
-    renderLeafs(context, plant.leafs, {
+    renderLeafs(context, plant, {
         positionOffset: offset,
+
+        stemColors: [
+            "#00C600",
+            "#00BC00",
+            "#00B200",
+            "#00A800",
+            "#009E00",
+            "#009400",
+            "#008A00",
+            "#008000",
+        ],
 
         colors: [
             "#C48000",
@@ -406,14 +425,15 @@ function renderGhostPlant(context: CanvasRenderingContext2D, plant: Plant) {
         positionOffset: offset,
 
         thickness: 10,
-        color: ghostColor,
+        colors: [ghostColor],
         borderWidth: 0,
         borderColor: "#00000000"
     });
 
-    renderLeafs(context, plant.leafs, {
+    renderLeafs(context, plant, {
         positionOffset: offset,
 
+        stemColors: [ghostColor],
         colors: [ghostColor],
         borderWidth: 2,
         borderColor: ghostColor
@@ -447,7 +467,11 @@ const range = (
     a: number
 ) => lerp(x2, y2, invlerp(x1, y1, a));
 
-function renderLeafs(context: CanvasRenderingContext2D, leafs: Leaf[], options: LeafRenderingOptions) {
+function renderLeafs(context: CanvasRenderingContext2D, plant: Plant, options: LeafRenderingOptions) {
+    const stemColorIndex = Math.round(range(1, 10, 0, options.stemColors.length - 1, plant.stemHealth));
+    const stemColor = options.stemColors[stemColorIndex];
+
+    const leafs = plant.leafs;
     for (const leaf of leafs) {
         if (leaf.area <= 0) {
             continue;
@@ -456,8 +480,14 @@ function renderLeafs(context: CanvasRenderingContext2D, leafs: Leaf[], options: 
         const position = leaf.stemSegment.endPosition;
         const isLeftLeaf = leaf.leafDirection === 'left';
 
-        const colorIndex = Math.round(range(1, 10, 0, options.colors.length - 1, leaf.health));
-        const color = options.colors[colorIndex];
+        const leafColorIndex = Math.round(range(1, 10, 0, options.colors.length - 1, leaf.health));
+        const leafColor = options.colors[leafColorIndex];
+
+        // #123456
+        const r = leafColor.substring(1, 3);
+        const g = stemColor.substring(3, 5);
+
+        const color = `#${r}${g}00`;
 
         const offsetPosition = Vec2.add(position, options.positionOffset);
         if (isLeftLeaf) {
@@ -482,11 +512,14 @@ type StemRenderingOptions = {
 
     thickness: number;
     borderWidth: number;
-    color: string;
+    colors: string[];
     borderColor: string;
 };
 
 function renderStem(context: CanvasRenderingContext2D, plant: Plant, options: StemRenderingOptions) {
+    const colorIndex = Math.round(range(1, 10, 0, options.colors.length - 1, plant.stemHealth));
+    const color = options.colors[colorIndex];
+
     if (options.borderWidth > 0) {
         _renderStem(context, plant, {
             positionOffset: options.positionOffset,
@@ -497,12 +530,12 @@ function renderStem(context: CanvasRenderingContext2D, plant: Plant, options: St
     _renderStem(context, plant, {
         positionOffset: options.positionOffset,
         thickness: options.thickness,
-        color: options.color,
+        color: color,
     });
 }
 
-function _renderStem(context: CanvasRenderingContext2D, plant: Plant, options: Pick<StemRenderingOptions, 'positionOffset' | 'thickness' | 'color'>) {
-    if (plant.stemGSegments.length === 0 && plant.leafs.length === 0) {
+function _renderStem(context: CanvasRenderingContext2D, plant: Plant, options: Pick<StemRenderingOptions, 'positionOffset' | 'thickness'> & Record<'color', string>) {
+    if (plant.stemSegments.length === 0 && plant.leafs.length === 0) {
         return;
     }
 
@@ -517,12 +550,12 @@ function _renderStem(context: CanvasRenderingContext2D, plant: Plant, options: P
     context.lineCap = 'round';
 
     // render root stem
-    if (plant.stemGSegments.length > 0) {
-        const startPosition = Vec2.add(plant.stemGSegments[0].startPosition, options.positionOffset);
+    if (plant.stemSegments.length > 0) {
+        const startPosition = Vec2.add(plant.stemSegments[0].startPosition, options.positionOffset);
         context.beginPath();
         context.moveTo(startPosition.x, context.canvas.height - startPosition.y);
-        for (let i = 1; i < plant.stemGSegments.length; i += 1) {
-            const endPosition = Vec2.add(plant.stemGSegments[i].endPosition, options.positionOffset);
+        for (let i = 1; i < plant.stemSegments.length; i += 1) {
+            const endPosition = Vec2.add(plant.stemSegments[i].endPosition, options.positionOffset);
             context.lineTo(endPosition.x, context.canvas.height - endPosition.y);
         }
         context.stroke();
@@ -554,7 +587,7 @@ type RootRenderingOptions = {
     borderColor: string;
 };
 function renderRoots(context: CanvasRenderingContext2D, plant: Plant, options: RootRenderingOptions) {
-    if (plant.rootGSegments.length === 0) {
+    if (plant.rootSegments.length === 0) {
         return;
     }
 
@@ -565,7 +598,7 @@ function renderRoots(context: CanvasRenderingContext2D, plant: Plant, options: R
     const oldLineCap = context.lineCap;
 
     context.lineCap = 'round';
-    for (const rootSegments of plant.rootGSegments) {
+    for (const rootSegments of plant.rootSegments) {
         if (rootSegments.length === 0) {
             continue;
         }
@@ -674,6 +707,7 @@ function renderFlower(context: CanvasRenderingContext2D, flower: Flower | null, 
 
 type LeafRenderingOptions = {
     positionOffset: Vec2;
+    stemColors: string[];
     colors: string[];
     borderWidth: number;
     borderColor: string;

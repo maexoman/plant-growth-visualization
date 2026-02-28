@@ -54,6 +54,8 @@ export class Plant {
     #state: PlantState;
     #age: number = 0;
 
+    // range: 0 - 100
+    #stemHealth: number;
     #stem: Growable;
     #roots: Growable[];
     #leafs: Leaf[] = [];
@@ -71,6 +73,7 @@ export class Plant {
         this.#state = 'growing';
         this.#manager = new PlantManager(this);
 
+        this.#stemHealth = 100;
         this.#stem = new Growable(new Vec2(ownerWorld.middleX, ownerWorld.groundY), {
             segmentMax: this.#ownerWorld.random.int(175, 200),
             segmentSize: 2,
@@ -93,6 +96,21 @@ export class Plant {
         }));
 
         this.#manager.manage(this.#ownerWorld.environment, this.#ownerWorld.resources);
+    }
+
+    decreaseStemHealth() {
+        if (this.#state === 'dead') {
+            return;
+        }
+        this.#stemHealth = Math.max(0, this.#stemHealth - 1);
+    }
+
+    increaseStemHealth() {
+        if (this.#state === 'dead') {
+            return;
+        }
+
+        this.#stemHealth = Math.min(100, this.#stemHealth + 1);
     }
 
     die() {
@@ -230,11 +248,15 @@ export class Plant {
         return this.#stem.endPosition;
     }
 
-    get stemGSegments() {
+    get stemHealth() {
+        return this.#stemHealth;
+    }
+
+    get stemSegments() {
         return this.#stem.segments;
     }
 
-    get rootGSegments() {
+    get rootSegments() {
         return this.#roots.map(r => r.segments);
     }
 }

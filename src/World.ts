@@ -229,10 +229,10 @@ export class World {
     }
 
     get stemGSegments() {
-        return this.#plant.stemGSegments;
+        return this.#plant.stemSegments;
     }
 
     get rootGSegments() {
-        return this.#plant.rootGSegments
+        return this.#plant.rootSegments
     }
 }
