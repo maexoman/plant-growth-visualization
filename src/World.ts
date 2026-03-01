@@ -204,6 +204,10 @@ export class World {
 
     }
 
+    isDone() {
+        return this.#plant.isDone();
+    }
+
     get sunPosition() {
         return this.#sunPosition;
     }

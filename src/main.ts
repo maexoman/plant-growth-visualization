@@ -15,12 +15,18 @@ function main() {
     const ghostCanvas = document.getElementById('ghost-canvas') as HTMLCanvasElement;
     const ghostContext = ghostCanvas.getContext('2d') as CanvasRenderingContext2D;
 
+    const dayCounterElement = (document.getElementById('day-counter') as HTMLSpanElement);
+
     const random = new Random();
     const world = new World(random, canvas.width, canvas.height);
 
+    let done = false;
     let update = false;
     // @ts-ignore
     window.gr = 0.75;
+
+    let dayTicks = 0;
+    let dayCounter = 0;
 
     let ghostRendered = false;
     let lastTimestamp: DOMHighResTimeStamp | undefined = undefined;
@@ -32,6 +38,25 @@ function main() {
 
         try {
             if (update === true) {
+                if (done === false && world.isDone()) {
+                    done = true;
+                    update = false;
+
+                    (document.getElementById('btn-pause') as HTMLButtonElement)
+                        .style.display = 'none';
+                    (document.getElementById('btn-start') as HTMLButtonElement)
+                        .style.display = 'none';
+                }
+            }
+            if (update === true) {
+                dayTicks += 1;
+                if (dayTicks >= 11) {
+
+                    dayCounter += 1;
+                    dayCounterElement.innerText = dayCounter.toString(10);
+                    dayTicks = 0;
+                }
+
                 world.update(deltaTime);
             }
 
@@ -83,9 +108,16 @@ function main() {
         ghostCanvas.style.display = 'none';
         ghostContext.clearRect(0, 0, ghostContext.canvas.width, ghostContext.canvas.height);
         ghostRendered = false;
+        dayTicks = 0;
+        dayCounter = 0;
+        dayCounterElement.innerText = dayCounter.toString(10);
+        done = false;
 
         (document.getElementById('btn-pause') as HTMLButtonElement)
             .style.display = 'none';
+
+        (document.getElementById('btn-start') as HTMLButtonElement)
+            .style.display = 'block';
 
         world.reset();
         syncWithWorld();
@@ -123,6 +155,27 @@ function main() {
         }
 
         world.setGravity(value);
+        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/s<sup>2</sup>)`;
+    });
+
+    const zeroGButton = document.getElementById('btn-zerog') as HTMLButtonElement;
+    zeroGButton.addEventListener('click', function () {
+        (document.getElementById('sld-gravity') as HTMLInputElement).value = '0';
+        world.setGravity(0);
+        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/s<sup>2</sup>)`;
+    });
+
+    const marsButton = document.getElementById('btn-mars') as HTMLButtonElement;
+    marsButton.addEventListener('click', function () {
+        (document.getElementById('sld-gravity') as HTMLInputElement).value = '4';
+        world.setGravity(4);
+        (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/s<sup>2</sup>)`;
+    });
+
+    const earthButton = document.getElementById('btn-earth') as HTMLButtonElement;
+    earthButton.addEventListener('click', function () {
+        (document.getElementById('sld-gravity') as HTMLInputElement).value = '10';
+        world.setGravity(10);
         (document.getElementById('gravitation') as HTMLTableCellElement).innerHTML = `(${-world.gravity.y} m/s<sup>2</sup>)`;
     });
 

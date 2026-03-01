@@ -31,6 +31,10 @@ export class Flower {
         return this.#size >= this.#sizeMax;
     }
 
+    isDone() {
+        return this.isFullyGrown();
+    }
+
     grow() {
         if (this.isFullyGrown()) {
             return;

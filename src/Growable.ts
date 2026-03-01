@@ -65,6 +65,13 @@ export class Growable {
         return this.segments.length >= this.#growthPotential * this.#segmentMax;
     }
 
+    isDone() {
+        return (
+            this.#state !== 'growing' ||
+            this.isFullyGrown()
+        );
+    }
+
     setGrowthPotential(potential: number) {
         if (this.#state !== 'growing') {
             return;

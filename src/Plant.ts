@@ -113,6 +113,19 @@ export class Plant {
         this.#stemHealth = Math.min(100, this.#stemHealth + 1);
     }
 
+    isDone() {
+        return (
+            this.#state === 'dead' ||
+            (
+                this.#state !== 'growing' &&
+                (
+                    this.#flower !== null &&
+                    this.#flower.isDone()
+                )
+            )
+        );
+    }
+
     die() {
         this.#state = 'dead';
     }

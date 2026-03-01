@@ -38,6 +38,19 @@ export class Leaf {
         return this.#stemGrowDirection.x <= 0 ? 'left' : 'right';
     }
 
+    isDone(): unknown {
+        if (this.#state === 'growing') {
+            return false;
+        }
+        if (this.#stemSize < this.#growthPotential * this.#stemSizeMax) {
+            return false;
+        }
+        if (this.#area < this.#growthPotential * this.#areaMax) {
+            return false;
+        }
+        return true;
+    }
+
     setGrowthPotential(potential: number) {
         this.#growthPotential = potential;
     }
@@ -63,6 +76,9 @@ export class Leaf {
     }
 
     grow() {
+        if (this.#state !== 'growing') {
+            return;
+        }
         if (this.#stemSize < this.#growthPotential * this.#stemSizeMax) {
             this.#growStem();
             return;
