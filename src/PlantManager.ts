@@ -525,6 +525,8 @@ export class PlantManager {
                 this.#flowerGrowTicks = Infinity;
                 this.#leafCreateHeights = Math.round(3 * OPTIMUM_CREATION_HEIGHTS.leaf);
 
+                this.#ticksUntilDeath = 1200;
+
                 this.#plant.setStemSizePotential(1.0);
                 this.#plant.setRootSizePotential(1.0);
                 this.#plant.setLeafSizePotential(0.5);

@@ -536,7 +536,7 @@ const range = (
 ) => lerp(x2, y2, invlerp(x1, y1, a));
 
 function renderLeafs(context: CanvasRenderingContext2D, plant: Plant, options: LeafRenderingOptions) {
-    const stemColorIndex = Math.round(range(1, 10, 0, options.stemColors.length - 1, plant.stemHealth));
+    const stemColorIndex = Math.round(range(1, 100, 0, options.stemColors.length - 1, plant.stemHealth));
     const stemColor = options.stemColors[stemColorIndex];
 
     const leafs = plant.leafs;
@@ -585,7 +585,7 @@ type StemRenderingOptions = {
 };
 
 function renderStem(context: CanvasRenderingContext2D, plant: Plant, options: StemRenderingOptions) {
-    const colorIndex = Math.round(range(1, 10, 0, options.colors.length - 1, plant.stemHealth));
+    const colorIndex = Math.round(range(1, 100, 0, options.colors.length - 1, plant.stemHealth));
     const color = options.colors[colorIndex];
 
     if (options.borderWidth > 0) {
